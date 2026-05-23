@@ -1,0 +1,139 @@
+name: Test Action
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test-matrix:
+    name: ${{ matrix.os }} / v${{ matrix.version }} (${{ matrix.channel }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            version: '3.44.0'
+            channel: stable
+          - os: macos-latest
+            version: '3.44'
+            channel: stable
+          - os: windows-latest
+            version: '3'
+            channel: stable
+
+    steps:
+      - name: Checkout action
+        uses: actions/checkout@v4
+
+      - name: Install Flutter git SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          FLUTTER_DIR="${RUNNER_TEMP}/flutter"
+          git clone https://github.com/flutter/flutter.git -b stable "${FLUTTER_DIR}"
+          git -C "${FLUTTER_DIR}" fetch --tags --force
+          echo "FLUTTER_ROOT=${FLUTTER_DIR}" >> "${GITHUB_ENV}"
+          echo "${FLUTTER_DIR}/bin" >> "${GITHUB_PATH}"
+
+      - name: Setup Flutter version
+        id: setup
+        uses: ./
+        with:
+          version: ${{ matrix.version }}
+          channel: ${{ matrix.channel }}
+          precache: 'false'
+
+      - name: Verify outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${{ steps.setup.outputs.version }}"
+          test -n "${{ steps.setup.outputs.flutter-root }}"
+          test -n "${{ steps.setup.outputs.channel }}"
+          echo "Resolved version: ${{ steps.setup.outputs.version }}"
+          flutter --version
+          flutter --version --machine | tee flutter-machine.json
+          if command -v jq >/dev/null 2>&1; then
+            ACTUAL="$(jq -r '.frameworkVersion' flutter-machine.json)"
+          else
+            ACTUAL="$(sed -n 's/.*\"frameworkVersion\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p' flutter-machine.json | head -n1)"
+          fi
+          EXPECTED="${{ steps.setup.outputs.version }}"
+          case "${ACTUAL}" in
+            "${EXPECTED}"*) echo "Version OK: ${ACTUAL}" ;;
+            *) echo "Unexpected version: ${ACTUAL} (expected ${EXPECTED})"; exit 1 ;;
+          esac
+
+  test-beta:
+    name: ubuntu / beta channel
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout action
+        uses: actions/checkout@v4
+
+      - name: Install Flutter git SDK (beta)
+        shell: bash
+        run: |
+          set -euo pipefail
+          FLUTTER_DIR="${RUNNER_TEMP}/flutter"
+          git clone https://github.com/flutter/flutter.git -b beta "${FLUTTER_DIR}"
+          git -C "${FLUTTER_DIR}" fetch --tags --force
+          echo "FLUTTER_ROOT=${FLUTTER_DIR}" >> "${GITHUB_ENV}"
+          echo "${FLUTTER_DIR}/bin" >> "${GITHUB_PATH}"
+
+      - name: Resolve beta channel head version
+        id: beta-version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(node -e "
+            const url = 'https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json';
+            fetch(url).then(r => r.json()).then(m => {
+              const hash = m.current_release.beta;
+              const release = m.releases.find(r => r.hash === hash && r.channel === 'beta');
+              if (!release) process.exit(1);
+              process.stdout.write(release.version);
+            }).catch(() => process.exit(1));
+          ")"
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "Using beta version: ${VERSION}"
+
+      - name: Setup Flutter version (beta)
+        id: setup
+        uses: ./
+        with:
+          version: ${{ steps.beta-version.outputs.version }}
+          channel: beta
+          precache: 'false'
+
+      - name: Verify beta setup
+        run: flutter --version
+
+  test-no-sdk:
+    name: ubuntu / missing SDK fails
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout action
+        uses: actions/checkout@v4
+
+      - name: Setup without Flutter SDK (expect failure)
+        id: setup
+        uses: ./
+        continue-on-error: true
+        with:
+          version: '3.44.0'
+          channel: stable
+          precache: 'false'
+
+      - name: Assert action failed
+        shell: bash
+        run: |
+          if [ "${{ steps.setup.outcome }}" != "failure" ]; then
+            echo "Expected action to fail when Flutter SDK is missing"
+            exit 1
+          fi
+          echo "Action failed as expected without Flutter SDK"

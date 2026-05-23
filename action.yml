@@ -1,0 +1,84 @@
+name: Setup Flutter Version
+description: Switch an existing Flutter git SDK to a resolved version (cross-platform).
+branding:
+  icon: package
+  color: blue
+
+inputs:
+  version:
+    description: >
+      Flutter version to use. Supports exact (3.44.0), minor (3.44), or major (3).
+    required: true
+  channel:
+    description: Release channel (stable or beta).
+    required: false
+    default: stable
+  flutter-root:
+    description: Path to an existing Flutter SDK git clone. Auto-detected if omitted.
+    required: false
+    default: ''
+  precache:
+    description: Run flutter precache after switching version.
+    required: false
+    default: 'true'
+  precache-platforms:
+    description: Comma-separated platforms to precache (android, ios, web, windows, linux, macos).
+    required: false
+    default: android,ios,web
+
+outputs:
+  version:
+    description: Resolved Flutter version (full semver).
+    value: ${{ steps.resolve.outputs.version }}
+  flutter-root:
+    description: Path to the Flutter SDK used.
+    value: ${{ steps.setup-unix.outputs.flutter-root || steps.setup-windows.outputs.flutter-root }}
+  channel:
+    description: Channel used.
+    value: ${{ steps.resolve.outputs.channel }}
+
+runs:
+  using: composite
+  steps:
+    - id: resolve
+      name: Resolve Flutter version
+      shell: bash
+      run: node "${{ github.action_path }}/lib/resolve-version.mjs"
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_CHANNEL: ${{ inputs.channel }}
+
+    - id: setup-unix
+      name: Setup Flutter
+      if: runner.os != 'Windows'
+      shell: bash
+      run: bash "${{ github.action_path }}/scripts/setup-flutter.sh"
+      env:
+        INPUT_FLUTTER_ROOT: ${{ inputs.flutter-root }}
+        INPUT_PRECACHE: ${{ inputs.precache }}
+        INPUT_PRECACHE_PLATFORMS: ${{ inputs.precache-platforms }}
+        RESOLVED_VERSION: ${{ steps.resolve.outputs.version }}
+        RESOLVED_HASH: ${{ steps.resolve.outputs.hash }}
+        RESOLVED_CHANNEL: ${{ steps.resolve.outputs.channel }}
+        RESOLVED_IS_CHANNEL_HEAD: ${{ steps.resolve.outputs.is-channel-head }}
+
+    - id: setup-windows
+      name: Setup Flutter
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: & "${{ github.action_path }}/scripts/setup-flutter.ps1"
+      env:
+        INPUT_FLUTTER_ROOT: ${{ inputs.flutter-root }}
+        INPUT_PRECACHE: ${{ inputs.precache }}
+        INPUT_PRECACHE_PLATFORMS: ${{ inputs.precache-platforms }}
+        RESOLVED_VERSION: ${{ steps.resolve.outputs.version }}
+        RESOLVED_HASH: ${{ steps.resolve.outputs.hash }}
+        RESOLVED_CHANNEL: ${{ steps.resolve.outputs.channel }}
+        RESOLVED_IS_CHANNEL_HEAD: ${{ steps.resolve.outputs.is-channel-head }}
+
+    - name: Export PATH and environment
+      shell: bash
+      run: |
+        FLUTTER_ROOT="${{ steps.setup-unix.outputs.flutter-root || steps.setup-windows.outputs.flutter-root }}"
+        echo "FLUTTER_ROOT=${FLUTTER_ROOT}" >> "$GITHUB_ENV"
+        echo "${FLUTTER_ROOT}/bin" >> "$GITHUB_PATH"
