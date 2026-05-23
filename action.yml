@@ -66,7 +66,8 @@ runs:
       name: Setup Flutter
       if: runner.os == 'Windows'
       shell: pwsh
-      run: & "${{ github.action_path }}/scripts/setup-flutter.ps1"
+      run: |
+        & "${{ github.action_path }}/scripts/setup-flutter.ps1"
       env:
         INPUT_FLUTTER_ROOT: ${{ inputs.flutter-root }}
         INPUT_PRECACHE: ${{ inputs.precache }}
