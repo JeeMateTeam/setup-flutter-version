@@ -11,7 +11,9 @@ fail() {
 }
 
 is_true() {
-  case "${1,,}" in
+  local value
+  value="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
+  case "$value" in
     true | 1 | yes) return 0 ;;
     *) return 1 ;;
   esac
