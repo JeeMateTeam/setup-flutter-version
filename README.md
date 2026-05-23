@@ -1,5 +1,7 @@
 # setup-flutter-version
 
+[![Test Action](https://github.com/JeeMateTeam/setup-flutter-version/actions/workflows/test-action.yml/badge.svg?branch=dev)](https://github.com/JeeMateTeam/setup-flutter-version/actions/workflows/test-action.yml)
+
 GitHub Action composite réutilisable qui bascule un **clone git Flutter existant** vers une version résolue via le manifest officiel. Compatible Linux, macOS et Windows (runners GitHub-hosted et self-hosted).
 
 > Cette action **ne télécharge pas** le SDK Flutter. Elle suppose qu’un clone git est déjà présent sur le runner (image Docker, runner self-hosted, etc.).
@@ -26,7 +28,7 @@ jobs:
       - uses: actions/checkout@v4
 
       # Flutter doit déjà être installé en clone git sur le runner
-      - uses: your-org/setup-flutter-version@v1
+      - uses: JeeMateTeam/setup-flutter-version@v1
         id: flutter
         with:
           version: '3.44.0'   # exact, mineure (3.44) ou majeure (3)
@@ -51,7 +53,7 @@ strategy:
     - version: '3'
       channel: stable
 steps:
-  - uses: your-org/setup-flutter-version@v1
+  - uses: JeeMateTeam/setup-flutter-version@v1
     with:
       version: ${{ matrix.version }}
       channel: ${{ matrix.channel }}

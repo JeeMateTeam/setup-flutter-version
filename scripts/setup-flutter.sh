@@ -34,7 +34,7 @@ path_has_flutter() {
 validate_git_clone() {
   local root="$1"
   if [[ ! -d "$root/.git" ]]; then
-    fail "Flutter SDK at '$root' is not a git clone (.git directory missing). Install Flutter via git clone. See: https://github.com/${GITHUB_REPOSITORY:-your-org/setup-flutter-version}#prerequisites"
+    fail "Flutter SDK at '$root' is not a git clone (.git directory missing). Install Flutter via git clone. See: https://github.com/${GITHUB_REPOSITORY:-JeeMateTeam/setup-flutter-version}#prerequisites"
   fi
 }
 

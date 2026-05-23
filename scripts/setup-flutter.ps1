@@ -24,7 +24,7 @@ function Test-FlutterRoot {
 function Assert-GitClone {
   param([string]$Root)
   if (-not (Test-Path "$Root\.git")) {
-    $repo = if ($env:GITHUB_REPOSITORY) { $env:GITHUB_REPOSITORY } else { 'your-org/setup-flutter-version' }
+    $repo = if ($env:GITHUB_REPOSITORY) { $env:GITHUB_REPOSITORY } else { 'JeeMateTeam/setup-flutter-version' }
     Write-Fail "Flutter SDK at '$Root' is not a git clone (.git directory missing). Install Flutter via git clone. See: https://github.com/$repo#prerequisites"
   }
 }
