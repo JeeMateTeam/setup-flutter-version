@@ -1,0 +1,22 @@
+name: Resolve Flutter Version
+description: Resolve a Flutter version from the official release manifest.
+inputs:
+  version:
+    description: Flutter version spec (exact, minor, or major).
+    required: true
+  channel:
+    description: Release channel (stable or beta).
+    required: false
+    default: stable
+outputs:
+  version:
+    description: Resolved Flutter version (full semver).
+  hash:
+    description: Git commit hash for the resolved release.
+  channel:
+    description: Channel used.
+  is-channel-head:
+    description: Whether the resolved release is the current channel head.
+runs:
+  using: node24
+  main: index.mjs

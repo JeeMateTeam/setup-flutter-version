@@ -42,11 +42,10 @@ runs:
   steps:
     - id: resolve
       name: Resolve Flutter version
-      shell: bash
-      run: node "${{ github.action_path }}/lib/resolve-version.mjs"
-      env:
-        INPUT_VERSION: ${{ inputs.version }}
-        INPUT_CHANNEL: ${{ inputs.channel }}
+      uses: ./resolve-version
+      with:
+        version: ${{ inputs.version }}
+        channel: ${{ inputs.channel }}
 
     - id: setup-unix
       name: Setup Flutter
