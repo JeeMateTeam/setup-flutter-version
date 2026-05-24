@@ -40,9 +40,18 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Stage resolve-version action
+      shell: bash
+      run: |
+        set -euo pipefail
+        dest="${GITHUB_WORKSPACE}/.setup-flutter-version/resolve-version"
+        rm -rf "${GITHUB_WORKSPACE}/.setup-flutter-version"
+        mkdir -p "${dest}"
+        cp -R "${GITHUB_ACTION_PATH}/resolve-version/." "${dest}/"
+
     - id: resolve
       name: Resolve Flutter version
-      uses: ${{ github.action_path }}/resolve-version
+      uses: ./.setup-flutter-version/resolve-version
       with:
         version: ${{ inputs.version }}
         channel: ${{ inputs.channel }}
