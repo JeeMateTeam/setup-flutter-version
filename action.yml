@@ -42,7 +42,7 @@ runs:
   steps:
     - id: resolve
       name: Resolve Flutter version
-      uses: ./resolve-version
+      uses: ${{ github.action_path }}/resolve-version
       with:
         version: ${{ inputs.version }}
         channel: ${{ inputs.channel }}
