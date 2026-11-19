@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 
 function Write-Log {
   param([string]$Message)
@@ -137,7 +137,8 @@ function Switch-ChannelIfNeeded {
   }
 
   Write-Log "Switching Flutter channel to '$Channel'..."
-  & $FlutterBin channel $Channel --cache-artifacts=false
+  # Reason: Flutter addFlag — disable with --no-cache-artifacts, not --cache-artifacts=false.
+  & $FlutterBin channel $Channel --no-cache-artifacts
   if ($LASTEXITCODE -ne 0) {
     Write-Fail "Failed to switch Flutter channel to '$Channel'."
   }

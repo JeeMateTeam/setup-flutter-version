@@ -106,7 +106,7 @@ Validation : le SDK doit contenir un répertoire `.git`.
 
 | Étape | Action |
 |-------|--------|
-| Canal | `flutter channel <channel> --cache-artifacts=false` si nécessaire |
+| Canal | `flutter channel <channel> --no-cache-artifacts` si nécessaire |
 | Tête de canal | `flutter upgrade --force` si la version résolue est la tête du canal |
 | Version pinée | `git fetch --tags --force` puis `git checkout <hash> -f` (fallback tag) |
 | Sync | `flutter doctor --suppress-analytics` |

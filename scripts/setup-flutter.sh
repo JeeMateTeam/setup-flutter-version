@@ -196,7 +196,8 @@ switch_channel_if_needed() {
   fi
 
   log "Switching Flutter channel to '$channel'..."
-  "$flutter_bin" channel "$channel" --cache-artifacts=false
+  # Reason: Flutter addFlag — disable with --no-cache-artifacts, not --cache-artifacts=false.
+  "$flutter_bin" channel "$channel" --no-cache-artifacts
 }
 
 switch_version() {
